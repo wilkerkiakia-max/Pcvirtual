@@ -1,0 +1,35 @@
+name: Windows Virtual Machine
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Baixar o Ngrok
+      run: |
+        Invoke-WebRequest https://bin.equinox.io/c/bTs2yAQAh2g/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
+        Expand-Archive ngrok.zip -DestinationPath .
+
+    - name: Autenticar o Ngrok
+      run: |
+        .\ngrok.exe config add-authtoken INSIRA_SEU_AUTHTOKEN_AQUI
+      # Substitua INSIRA_SEU_AUTHTOKEN_AQUI pelo seu token do site do ngrok.com
+
+    - name: Ativar conexões da Área de Trabalho Remota (RDP)
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+    - name: Definir senha do usuário da máquina
+      run: |
+        net user runneradmin SuaSenhaSegura123!
+
+    - name: Iniciar o túnel RDP
+      run: |
+        .\ngrok.exe tcp 3389
+
+
